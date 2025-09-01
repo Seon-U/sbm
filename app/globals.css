@@ -129,8 +129,9 @@
 
 @layer components {
   .btn-icon {
-    @apply border border-blue-300 rounded-full p-1 [&>svg]:stroke-blue-500 
-          [&>svg:hover]:stroke-blue-800 hover:ring-1 hover:ring-blue-500;
+    /* @apply border border-blue-300 rounded-full p-1 [&>svg]:stroke-blue-500 
+          [&>svg:hover]:stroke-blue-800 hover:ring-1 hover:ring-blue-500; */
+    @apply hover:rounded-full border border-blue-300 p-1 transition-all duration-100 hover:ring-1 hover:ring-blue-500 active:scale-75 [&>svg:hover]:stroke-blue-500 [&>svg]:stroke-blue-800 dark:text-blue-300 dark:hover:text-blue-200;
   }
 }
 
