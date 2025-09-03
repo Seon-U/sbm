@@ -82,6 +82,7 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "always",
     "source.organizeImports.biome": "explicit",
+    "quickfix.biome": "explicit",
     "source.fixAll.biome": "explicit",
     "source.sortImports": "explicit",
     "source.removeUnusedImports": "explicit"
