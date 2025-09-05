@@ -1,5 +1,5 @@
 import { GithubLoginButton } from './github-login-button';
-import { GoogleLoginButton } from './google-guide-button';
+import { GoogleLoginButton } from './google-login-button';
 import { KakaoLoginButton } from './kakao-login-button';
 import { NaverLoginButton } from './naver-login-button';
 import SignForm from './sign-form';
