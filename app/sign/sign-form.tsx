@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useReducer } from 'react';
 import LabelInput from '@/components/lable-input';
 import { Button } from '@/components/ui/button';
+import { authorize } from './sign.action';
 
 export default function SignForm() {
   const [isSignin, toggleSign] = useReducer(pre => !pre, false);
@@ -19,19 +20,39 @@ export default function SignForm() {
 }
 
 function SignIn({ toggleSign }: { toggleSign: () => void }) {
+  const makeLogin = async (formData: FormData) => {
+    // const email = formData.get('email');
+    // const passwd = formData.get('passwd');
+
+    // const validator = z
+    //   .object({
+    //     email: z.email('잘못된 이메일 형식입니다'),
+    //     passwd: z.string().min(6, '6글자 이상 입력하시오'),
+    //   })
+    //   .safeParse(Object.fromEntries(formData.entries()));
+
+    // if (!validator.success) {
+    //   console.log('Error:', validator.error);
+    //   return alert(validator.error);
+    // }
+
+    await authorize(formData);
+  };
   return (
     <>
-      <form className='flex flex-col space-y-3'>
+      <form action={makeLogin} className='flex flex-col space-y-3'>
         <LabelInput
           label='email'
           type='email'
           name='email'
+          defaultValue={'jeonseongho@naver.com'}
           placeholder='email@bookmark.com'
         />
         <LabelInput
           label='password'
           type='password'
           name='passwd'
+          defaultValue={'121212'}
           placeholder='your password...'
           className='my-3x'
         />
