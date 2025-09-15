@@ -4,7 +4,7 @@ import { KakaoLoginButton } from './(sign-buttons)/kakao-login-button';
 import { NaverLoginButton } from './(sign-buttons)/naver-login-button';
 import { BookImages, MarkImages, PeopleImages } from './images';
 import SignForm from './sign-form';
-import { SoMany } from './so-many';
+import SoMany from './so-many';
 
 export default function Sign() {
   return (
