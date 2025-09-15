@@ -1,8 +1,10 @@
 import { SquareLibraryIcon } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { use } from 'react';
 import ThemeChanger from '@/components/theme-changer';
 import { auth } from '@/lib/auth';
+import DummyProfile from '@/public/dummy-profile.png';
 
 export default function Nav() {
   const session = use(auth());
@@ -15,7 +17,14 @@ export default function Nav() {
       </Link>
       <ThemeChanger />
       {didlogin ? (
-        <Link href='/my'>{session.user?.name}</Link>
+        <Link href='/my' className='overflow-hidden rounded-full border'>
+          <Image
+            src={DummyProfile}
+            alt={session.user?.name || 'guest'}
+            width={40}
+            height={40}
+          />
+        </Link>
       ) : (
         <Link href='/sign'>Sign In</Link>
       )}

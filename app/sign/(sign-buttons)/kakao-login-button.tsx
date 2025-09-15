@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { login } from './sign.action';
+import { login } from '../sign.action';
 
 export function KakaoLoginButton() {
   const makeLogin = async () => {
