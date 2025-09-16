@@ -1,4 +1,4 @@
-import { LabelInput } from '@/components/lable-input';
+import LabelInput from '@/components/label-input';
 import { Button } from '@/components/ui/button';
 import prisma from '@/lib/db';
 
@@ -7,7 +7,7 @@ export default async function ResetForgotPasswd({
 }: {
   params: Promise<{ emailcheck: string }>;
 }) {
-  const { emailcheck: string } = await params;
+  const { emailcheck } = await params;
   console.log('🚀 ~ emailcheck:', emailcheck);
 
   const mbr = await prisma.member.findFirst({

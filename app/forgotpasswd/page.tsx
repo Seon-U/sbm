@@ -2,7 +2,7 @@ import Link from 'next/link';
 import LabelInput from '@/components/label-input';
 import { Button } from '@/components/ui/button';
 
-export default function ForgtotPasswd() {
+export default function ForgotPasswd() {
   const sendResetPasswd = async () => {
     'use server';
   };

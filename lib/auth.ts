@@ -1,4 +1,5 @@
 // lib/auth.ts 작성
+
 import NextAuth, { AuthError, type User } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import Github from 'next-auth/providers/github';
@@ -6,6 +7,7 @@ import Google from 'next-auth/providers/google';
 import Kakao from 'next-auth/providers/kakao';
 import Naver from 'next-auth/providers/naver';
 import z from 'zod';
+import { findMemberByEmail } from '@/app/sign/sign.action';
 import prisma from './db';
 
 export const {
@@ -61,8 +63,12 @@ export const {
       const { email, name: nickname, image } = user;
       if (!email) return false;
 
-      const mbr = await prisma.member.findUnique({ where: { email } });
+      // const mbr = await prisma.member.findUnique({ where: { email } });
+      const mbr = await findMemberByEmail(email, isCredential);
       console.log('🚀 ~ mbr:', mbr);
+      if (mbr?.emailcheck) {
+        return `/sign/error?error=CheckEmail&email=${email}`;
+      }
       if (isCredential) {
         if (!mbr) throw new AuthError('NotExistsMember');
         // 암호 비교(compare) ==> 실패하면 오류! 성공하면 로그인!

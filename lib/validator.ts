@@ -16,7 +16,7 @@ export type ValidError = Record<
 export const validate = <T extends z.ZodObject>(
   zobj: T,
   formData: FormData
-): [ValidError | undefined, z.core.output<T>?] => {
+): [ValidError] | [undefined, z.core.output<T>] => {
   const ent = Object.fromEntries(formData.entries());
   console.log('🚀 ~ ent:', ent);
 
