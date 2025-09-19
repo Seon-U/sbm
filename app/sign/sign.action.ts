@@ -2,20 +2,21 @@
 
 import { hash } from 'bcryptjs';
 import { redirect } from 'next/navigation';
+import { AuthError } from 'next-auth';
 import z from 'zod';
 import { signIn, signOut } from '@/lib/auth';
 import prisma from '@/lib/db';
 import { newToken } from '@/lib/utils';
 import { type ValidError, validate } from '@/lib/validator';
-import { sendRegistCheck } from './mail.action';
 
-type Provider = 'google' | 'github' | 'naver' | 'kakao';
+export type Provider = 'google' | 'github' | 'naver' | 'kakao';
 
-export const login = async (provider: Provider, callback?: string) => {
+export const login = async (provider: Provider, callback?: string | null) => {
   await signIn(provider, { redirectTo: callback || '/bookcase' });
 };
 
-export const loginNaver = async () => login('naver');
+export const loginNaver = async (redirectTo?: string | null) =>
+  login('naver', redirectTo);
 
 //credential login (email, passwd)
 export const authorize = async (
@@ -31,10 +32,37 @@ export const authorize = async (
   if (err) return err;
 
   try {
+    const redirectTo = formData.get('redirectTo')?.toString() || '/bookcase';
+    console.log('🚀 ~ redirectTo:', redirectTo);
     // await signIn('credentials', formData);
-    await signIn('credentials', { ...data, redirectTo: '/bookcase' });
+    await signIn('credentials', { ...data, redirectTo });
   } catch (error) {
-    console.log('🚀 ~ error:', error);
+    console.log('🚀 ~ sign.action.authorize - error:', error);
+    if (error instanceof AuthError) {
+      let typeErr: string;
+
+      switch (error.type) {
+        case 'AccessDenied':
+        case 'EmailSignInError':
+          typeErr = error.message.split('Read more')[0];
+          break;
+        case 'OAuthAccountNotLinked':
+          typeErr = 'Already registed SNS Account';
+          break;
+        case 'CredentialsSignin':
+          typeErr =
+            error.message.split('Read more')[0] ||
+            'Not match Email or Password!';
+          break;
+        default:
+          typeErr = error.message || 'Something went wrong!';
+      }
+
+      return {
+        email: { errors: [typeErr], value: data.email },
+        passwd: { errors: [], value: data.passwd },
+      } as ValidError;
+    }
     throw error;
   }
 };
@@ -66,7 +94,7 @@ export const regist = async (
   const { email, nickname, passwd: orgPasswd } = data;
   const mbr = await findMemberByEmail(email);
   if (mbr)
-    return { email: { errors: ['Duplicated Email Address'], value: email } };
+    return { email: { errors: ['Duplicated Email Address!'], value: email } };
 
   const passwd = await hash(orgPasswd, 10);
   const emailcheck = newToken();
@@ -74,7 +102,16 @@ export const regist = async (
     data: { email, nickname, passwd, emailcheck },
   });
 
-  await sendRegistCheck(email, emailcheck);
+  // await sendRegistCheck(email, emailcheck);
+  // fetch
+  const { NEXT_PUBLIC_URL, INTERNAL_SECRET } = process.env;
+  fetch(`${NEXT_PUBLIC_URL}/api/sendmail`, {
+    method: 'POST',
+    headers: {
+      authorization: `Bearer ${INTERNAL_SECRET}`,
+    },
+    body: JSON.stringify({ email, emailcheck }),
+  });
 
   redirect(`sign/error?error=CheckEmail&email=${email}`);
 };
@@ -88,8 +125,9 @@ export const findMemberByEmail = async (
       id: true,
       nickname: true,
       isadmin: true,
-      passwd,
       emailcheck: true,
+      outdt: true,
+      passwd,
     },
     where: { email },
   });

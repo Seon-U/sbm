@@ -1,8 +1,9 @@
 'use client';
 import { Button } from '@/components/ui/button';
-import { login } from '../sign.action';
+import { useLogin } from './login-hook';
 
 export function GoogleLoginButton() {
+  const login = useLogin();
   return (
     <Button
       onClick={() => login('google')}

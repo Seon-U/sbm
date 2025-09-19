@@ -1,14 +1,19 @@
 import { Button } from '@/components/ui/button';
-import { login } from '../sign.action';
+import { loginNaver } from '../sign.action';
 
-export function NaverLoginButton() {
-  const makeLogin = async () => {
+export function NaverLoginButton({
+  redirectTo,
+}: {
+  redirectTo: string | null;
+}) {
+  const makeNaverLogin = async () => {
     'use server';
-    await login('naver');
+    await loginNaver(redirectTo);
   };
+
   return (
     <Button
-      onClick={makeLogin}
+      onClick={makeNaverLogin}
       variant='outline'
       className='h-12 w-full gap-2 bg-[#03C75A] text-white hover:bg-[#02b155]'
     >

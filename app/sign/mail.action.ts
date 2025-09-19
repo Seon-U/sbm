@@ -30,7 +30,7 @@ export const sendRegistCheck = async (to: string, authKey: string) => {
     </div>
   `;
 
-  sendMail(to, subject, html);
+  return sendMail(to, subject, html);
 };
 
 export const sendPasswordReset = async (
@@ -50,7 +50,7 @@ export const sendPasswordReset = async (
     </div>
   `;
 
-  sendMail(to, subject, html);
+  return sendMail(to, subject, html);
 };
 
 const sendMail = async (
@@ -58,13 +58,12 @@ const sendMail = async (
   subject: string,
   html: string,
   attachments?: Attachments
-) => {
+) =>
   TRANS.sendMail({
     from: FROM,
     to,
-    bcc: 'indiflex.sico@gmail.com',
+    bcc: 'indiflex.sico@gmail.com', // QQQ
     subject,
     html,
     attachments,
   });
-};

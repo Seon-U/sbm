@@ -24,6 +24,7 @@ export default function SignForm() {
 function SignIn({ toggleSign }: { toggleSign: () => void }) {
   const searchParams = useSearchParams();
   const email = searchParams.get('email');
+  const redirectTo = searchParams.get('redirectTo');
 
   const passwdRef = useRef<HTMLInputElement>(null);
 
@@ -31,6 +32,11 @@ function SignIn({ toggleSign }: { toggleSign: () => void }) {
     authorize,
     undefined
   );
+
+  // const makeLoginAction = (formData: FormData) => {
+  //   if (redirectTo) formData.set('redirectTo', redirectTo);
+  //   makeLogin(formData);
+  // };
 
   useEffect(() => {
     if (email) {
@@ -41,6 +47,9 @@ function SignIn({ toggleSign }: { toggleSign: () => void }) {
   return (
     <>
       <form action={makeLogin} className='flex flex-col space-y-3'>
+        {redirectTo && (
+          <input type='hidden' name='redirectTo' value={redirectTo} />
+        )}
         <LabelInput
           label='email'
           type='email'
@@ -55,7 +64,6 @@ function SignIn({ toggleSign }: { toggleSign: () => void }) {
           type='password'
           name='passwd'
           error={validError}
-          defaultValue={'121212'}
           ref={passwdRef}
           placeholder='your password..'
           className='my-3x'
@@ -65,7 +73,7 @@ function SignIn({ toggleSign }: { toggleSign: () => void }) {
             <input
               type='checkbox'
               id='remember'
-              className='mr-1 translate-y-{1px}'
+              className='mr-1 translate-y-[1px]'
             />
             Remember me
           </label>
@@ -79,7 +87,7 @@ function SignIn({ toggleSign }: { toggleSign: () => void }) {
           className='w-full'
           disabled={isPending}
         >
-          {isPending ? 'Signing...' : 'Sign in'}
+          {isPending ? 'Signing...' : 'Sign In'}
         </Button>
       </form>
       <div className='mt-5 flex gap-10'>
