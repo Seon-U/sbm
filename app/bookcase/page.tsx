@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth';
 
 export default function Bookcase() {
   const session = use(auth());
+  console.log('🚀 ~ session:', session);
   const didLogin = !!session?.user?.email;
   if (!session?.user?.name) redirect('/');
 

@@ -22,9 +22,4 @@ export default async function RegistCheck({ params, searchParams }: Props) {
   });
 
   redirect(`/sign?email=${email}`);
-  // return (
-  //   <h1>
-  //     {email}:{emailcheck} - {mbr?.nickname}
-  //   </h1>
-  // );
 }

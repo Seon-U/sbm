@@ -8,6 +8,7 @@ import { signIn, signOut } from '@/lib/auth';
 import prisma from '@/lib/db';
 import { newToken } from '@/lib/utils';
 import { type ValidError, validate } from '@/lib/validator';
+import type { SendMailBody } from '../api/sendmail/route';
 
 export type Provider = 'google' | 'github' | 'naver' | 'kakao';
 
@@ -18,7 +19,7 @@ export const login = async (provider: Provider, callback?: string | null) => {
 export const loginNaver = async (redirectTo?: string | null) =>
   login('naver', redirectTo);
 
-//credential login (email, passwd)
+// credential login (email, passwd)
 export const authorize = async (
   _preValidError: ValidError | undefined,
   formData: FormData
@@ -27,7 +28,6 @@ export const authorize = async (
     email: z.email(),
     passwd: z.string().min(6, 'More than 6 characters!'),
   });
-
   const [err, data] = validate(zobj, formData);
   if (err) return err;
 
@@ -37,17 +37,16 @@ export const authorize = async (
     // await signIn('credentials', formData);
     await signIn('credentials', { ...data, redirectTo });
   } catch (error) {
-    console.log('🚀 ~ sign.action.authorize - error:', error);
+    console.log('🚀 sign.action.authorize - error:', error);
     if (error instanceof AuthError) {
       let typeErr: string;
-
       switch (error.type) {
         case 'AccessDenied':
         case 'EmailSignInError':
           typeErr = error.message.split('Read more')[0];
           break;
         case 'OAuthAccountNotLinked':
-          typeErr = 'Already registed SNS Account';
+          typeErr = `Already registed SNS Account`;
           break;
         case 'CredentialsSignin':
           typeErr =
@@ -68,7 +67,7 @@ export const authorize = async (
 };
 
 export const logout = async () => {
-  await signOut({ redirectTo: '/sign' }); //QQQ: '/'
+  await signOut({ redirectTo: '/sign' }); // QQQ: '/'
 };
 
 export const regist = async (
@@ -88,13 +87,14 @@ export const regist = async (
     });
 
   const [err, data] = validate(zobj, formData);
-  // return err;
   if (err) return err;
 
   const { email, nickname, passwd: orgPasswd } = data;
   const mbr = await findMemberByEmail(email);
   if (mbr)
-    return { email: { errors: ['Duplicated Email Address!'], value: email } };
+    return {
+      email: { errors: ['Duplicated Email Address!'], value: email },
+    };
 
   const passwd = await hash(orgPasswd, 10);
   const emailcheck = newToken();
@@ -102,25 +102,95 @@ export const regist = async (
     data: { email, nickname, passwd, emailcheck },
   });
 
-  // await sendRegistCheck(email, emailcheck);
   // fetch
+  sendmailByFetch({ email, emailcheck });
+
+  redirect(`/sign/error?error=CheckEmail&email=${email}`);
+};
+
+export const sendResetPassword = async (
+  _: ValidError | undefined,
+  formData: FormData
+) => {
+  const zobj = z.object({
+    email: z.email(),
+  });
+  const [err, data] = validate(zobj, formData);
+  if (err) return err;
+
+  const emailcheck = newToken();
+  const { email } = data;
+  const { nickname } = await prisma.member.update({
+    select: { nickname: true },
+    where: { email },
+    data: { emailcheck },
+  });
+
+  const rs = await sendmailByFetch({
+    email,
+    emailcheck,
+    nickname,
+    emailType: 'reset-password',
+  });
+
+  if (!rs.ok) return { email: { errors: ['Fail to send email!'] } };
+
+  redirect(`/sign/error?error=CheckEmail&email=${email}`);
+};
+
+export const resendRegist = async (
+  _: ValidError | undefined,
+  formData: FormData
+) => {
+  const zobj = z.object({
+    email: z.email(),
+    emailcheck: z.uuidv4(),
+  });
+  const [err, data] = validate(zobj, formData);
+  if (err) return err;
+
+  const { email, emailcheck } = data;
+  const mbr = await findMemberByEmail(email);
+  if (!mbr || mbr.emailcheck !== emailcheck) {
+    redirect('/sign/error?error=EmailSendFail');
+  }
+
+  const newEmailCheck = newToken();
+  await prisma.member.update({
+    where: { email },
+    data: { emailcheck: newEmailCheck },
+  });
+
+  const rs = await sendmailByFetch({
+    email,
+    emailcheck: newEmailCheck,
+  });
+  if (!rs.ok) return { email: { errors: ['Fail to send email!'] } };
+
+  redirect(`/sign/error?error=CheckEmail&email=${email}`);
+};
+
+const sendmailByFetch = async ({
+  email,
+  emailcheck,
+  nickname,
+  emailType = 'regist',
+}: SendMailBody) => {
   const { NEXT_PUBLIC_URL, INTERNAL_SECRET } = process.env;
-  fetch(`${NEXT_PUBLIC_URL}/api/sendmail`, {
+  return fetch(`${NEXT_PUBLIC_URL}/api/sendmail`, {
     method: 'POST',
     headers: {
       authorization: `Bearer ${INTERNAL_SECRET}`,
     },
-    body: JSON.stringify({ email, emailcheck }),
+    body: JSON.stringify({ email, emailcheck, nickname, emailType }),
   });
-
-  redirect(`sign/error?error=CheckEmail&email=${email}`);
 };
 
 export const findMemberByEmail = async (
   email: string,
   passwd: boolean = false
-) =>
-  prisma.member.findUnique({
+) => {
+  return prisma.member.findUnique({
     select: {
       id: true,
       nickname: true,
@@ -131,3 +201,4 @@ export const findMemberByEmail = async (
     },
     where: { email },
   });
+};
