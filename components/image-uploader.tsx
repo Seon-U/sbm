@@ -1,3 +1,5 @@
+'use client';
+
 import type { StaticImageData } from 'next/image';
 import Image from 'next/image';
 import { useSession } from 'next-auth/react';

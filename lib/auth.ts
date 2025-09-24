@@ -1,5 +1,3 @@
-// lib/auth.ts 작성
-
 import { compare } from 'bcryptjs';
 import NextAuth, { AuthError } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';

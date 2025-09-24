@@ -257,7 +257,7 @@ export const updateProfileImage = async (formData: FormData) => {
   console.log('🚀 ~ data:', data);
 
   const uploadDir = path.join(process.cwd(), 'public', 'profiles');
-  if (existsSync(uploadDir)) mkdirSync(uploadDir);
+  if (!existsSync(uploadDir)) mkdirSync(uploadDir);
 
   const fileName = `${id}_${uniqId()}_${data.image.name}`;
   const filePath = path.join(uploadDir, fileName);

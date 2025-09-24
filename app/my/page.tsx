@@ -1,7 +1,6 @@
-'use client';
+// 'use client';
 
 import { FileOutputIcon } from 'lucide-react';
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { use } from 'react';
 import ImageUploader from '@/components/image-uploader';
@@ -23,13 +22,12 @@ export default function My() {
         <h1 className='mb-5 font-semibold text-2xl'>My Page</h1>
         <div className='grid grid-cols-3 gap-2'>
           <div className='flex flex-col items-center justify-between gap-5'>
-            <Link href='/api/auth/signout'>Goto SignOut</Link>
-            <div className='x'>
-              <ImageUploader
-                src={image || DummyProfile}
-                alt={name}
-                changeImage={updateProfileImage}
-              />
+            <ImageUploader
+              src={image || DummyProfile}
+              alt={name}
+              changeImage={updateProfileImage}
+            />
+            <div>
               <SignoutButton name={name} />
               <Button variant={'destructive'} className='mt-3 w-full'>
                 <FileOutputIcon /> WithDraw Bookmark
