@@ -1,12 +1,15 @@
 'use server';
 
 import { hash } from 'bcryptjs';
+import { existsSync, mkdirSync } from 'fs';
+import { writeFile } from 'fs/promises';
 import { redirect } from 'next/navigation';
 import { AuthError } from 'next-auth';
+import path from 'path';
 import z from 'zod';
-import { signIn, signOut } from '@/lib/auth';
+import { auth, signIn, signOut } from '@/lib/auth';
 import prisma from '@/lib/db';
-import { newToken } from '@/lib/utils';
+import { newToken, uniqId } from '@/lib/utils';
 import { type ValidError, validate } from '@/lib/validator';
 import type { SendMailBody } from '../api/sendmail/route';
 
@@ -138,6 +141,36 @@ export const sendResetPassword = async (
   redirect(`/sign/error?error=CheckEmail&email=${email}`);
 };
 
+export const resetPassword = async (
+  _: ValidError | undefined,
+  formData: FormData
+) => {
+  const zobj = z
+    .object({
+      email: z.email(),
+      emailcheck: z.uuidv4(),
+      passwd: z.string().min(6),
+      passwd2: z.string().min(6),
+    })
+    .refine(({ passwd, passwd2 }) => passwd === passwd2, {
+      path: ['passwd2'],
+      message: 'Not match password and Password confirm!',
+    });
+
+  const [err, data] = validate(zobj, formData);
+  if (err) return err;
+
+  const { email, passwd2, emailcheck } = data;
+
+  const passwd = await hash(passwd2, 10);
+  await prisma.member.update({
+    where: { email, emailcheck },
+    data: { passwd, emailcheck: null },
+  });
+
+  redirect(`/sign/error?error=Your password changed.`);
+};
+
 export const resendRegist = async (
   _: ValidError | undefined,
   formData: FormData
@@ -189,16 +222,54 @@ const sendmailByFetch = async ({
 export const findMemberByEmail = async (
   email: string,
   passwd: boolean = false
-) => {
-  return prisma.member.findUnique({
+) =>
+  prisma.member.findUnique({
     select: {
       id: true,
       nickname: true,
       isadmin: true,
       emailcheck: true,
       outdt: true,
+      image: true,
       passwd,
     },
     where: { email },
   });
+
+export const updateProfileImage = async (formData: FormData) => {
+  const session = await auth();
+  if (!session?.user || !session.user.email) return {}; //[new Error(`Need Login`)];
+
+  const { id, email } = session.user;
+  const ent = Object.fromEntries(formData.entries());
+  const zobj = z.object({
+    image: z
+      .instanceof(File)
+      .refine(file => file.size <= 10 * 1024 * 1024, 'Under 10MB!')
+      .refine(file => file.type.startsWith('image/'), 'Upload Image only!'),
+  });
+
+  const [err, data] = validate(zobj, formData);
+  // console.log('🚀 ~ err:', err);
+  // console.log('🚀 ~ data:', data);
+  if (err) return [err];
+
+  console.log('🚀 ~ data:', data);
+
+  const uploadDir = path.join(process.cwd(), 'public', 'profiles');
+  if (existsSync(uploadDir)) mkdirSync(uploadDir);
+
+  const fileName = `${id}_${uniqId()}_${data.image.name}`;
+  const filePath = path.join(uploadDir, fileName);
+
+  const buffer = Buffer.from(await data.image.arrayBuffer());
+  await writeFile(filePath, buffer);
+  const image = `/profiles/${fileName}`;
+
+  const mbr = await prisma.member.update({
+    where: { email },
+    data: { image },
+  });
+
+  return [null, mbr];
 };

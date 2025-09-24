@@ -52,10 +52,9 @@ export const {
       const { email, name: nickname, image } = user;
       if (!email) return false;
 
-      const mbr = await findMemberByEmail(email, isCredential);
+      let mbr = await findMemberByEmail(email, isCredential);
       console.log('🚀 ~ mbr:', mbr);
       if (mbr?.emailcheck) {
-        //TODO: emailcheck 다시 보내기! (:가입 시 받은 이메일을 실수로 삭제!)
         return `/sign/error?error=CheckEmail&email=${email}&emailcheck=${mbr.emailcheck}`;
       }
 
@@ -71,16 +70,21 @@ export const {
           throw authError('Invalid Password!', 'CredentialsSignin');
       } else {
         //sns 자동 가입!
-        if (!mbr && nickname) {
-          await prisma.member.create({
-            data: { email, nickname, image },
+        if (!mbr) {
+          mbr = await prisma.member.create({
+            data: { email, nickname: nickname || 'guest', image },
           });
         }
       }
+
+      user.id = String(mbr.id);
+      user.name = mbr.nickname;
+      if (mbr.image) user.image = mbr.image;
+      user.isadmin = mbr.isadmin;
       return true;
     },
     async jwt({ token, user, trigger, account, session }) {
-      console.log('🚀 ~ account:', account);
+      if (account) console.log('🚀 ~ account:', account);
 
       const userData = trigger === 'update' ? session : user;
 

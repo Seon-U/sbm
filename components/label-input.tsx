@@ -14,14 +14,10 @@ import { Input } from './ui/input';
 
 type Props = {
   label: string;
-  type?: string;
   name?: string;
   ref?: RefObject<HTMLInputElement | null>;
   focus?: boolean;
-  defaultValue?: string | number;
   error?: ValidError;
-  placeholder?: string;
-  className?: string;
   inputClassName?: string;
 };
 
@@ -37,7 +33,7 @@ export default function LabelInput({
   className,
   inputClassName,
   ...props
-}: Props & ComponentProps<'input'>) {
+}: ComponentProps<'input'> & Props) {
   const uniqName = useId();
   const inpRef = useRef<HTMLInputElement>(null);
   const err = !!error && !!name && error[name] ? error[name].errors : [];
@@ -64,7 +60,7 @@ export default function LabelInput({
           id={uniqName}
           name={name || uniqName}
           ref={ref || inpRef}
-          defaultValue={val || defaultValue}
+          defaultValue={val || defaultValue || ''}
           placeholder={placeholder || ''}
           className={cn(
             'bg-gray-100 font-normal focus:bg-white',

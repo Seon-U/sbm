@@ -8,6 +8,16 @@ export function cn(...inputs: ClassValue[]) {
 
 export const newToken = () => uuid();
 
+export const uniqId = (cnt = 5) =>
+  Math.random()
+    .toString(36)
+    .substring(2, cnt + 2);
+
+export const uniqNumId = (cnt = 5) =>
+  Math.random()
+    .toString(10)
+    .substring(2, cnt + 2);
+
 export const DynamicCsses = [
   'translate-x-[-20px]',
   'translate-x-[-40px]',

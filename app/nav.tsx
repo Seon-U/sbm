@@ -11,7 +11,7 @@ export default function Nav() {
   const didlogin = !!session?.user;
   console.log('🚀 ~ session:', session?.user);
   return (
-    <div className='flex items-center gap-5'>
+    <div className='flex items-center gap-5 py-1'>
       <Link href='/bookcase' className='btn-icon'>
         <SquareLibraryIcon />
       </Link>
@@ -19,14 +19,14 @@ export default function Nav() {
       {didlogin ? (
         <Link href='/my' className='overflow-hidden rounded-full border'>
           <Image
-            src={DummyProfile}
+            src={session.user?.image || DummyProfile}
             alt={session.user?.name || 'guest'}
             width={40}
             height={40}
           />
         </Link>
       ) : (
-        <Link href='/sign'>Sign In</Link>
+        <Link href='/sign'>Login</Link>
       )}
     </div>
   );
