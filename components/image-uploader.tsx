@@ -96,6 +96,8 @@ export default function ImageUploader({ src, alt, changeImage }: Props) {
           onClick={() => fileRef.current?.click()}
           className='rounded-full border'
           fill
+          unoptimized
+          priority={false}
         />
 
         {/* <Img src={img as string} /> */}

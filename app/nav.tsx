@@ -23,6 +23,9 @@ export default function Nav() {
             alt={session.user?.name || 'guest'}
             width={40}
             height={40}
+            style={{ width: 40, height: 40 }}
+            unoptimized
+            priority={false}
           />
         </Link>
       ) : (
