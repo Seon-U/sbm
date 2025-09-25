@@ -1,4 +1,3 @@
-import { compare } from 'bcryptjs';
 import NextAuth, { AuthError } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import Github from 'next-auth/providers/github';
@@ -6,8 +5,8 @@ import Google from 'next-auth/providers/google';
 import Kakao from 'next-auth/providers/kakao';
 import Naver from 'next-auth/providers/naver';
 import z from 'zod';
-import { findMemberByEmail } from '@/app/sign/sign.action';
-import prisma from './db';
+import prisma, { findMemberByEmail } from './db';
+import { comparePassword } from './utils';
 import { validateObject } from './validator';
 
 export const {
@@ -63,7 +62,10 @@ export const {
         if (!mbr.passwd)
           throw authError('RegistedBySNS', 'OAuthAccountNotLinked');
 
-        const isValidPasswd = await compare(user.passwd ?? '', mbr.passwd);
+        const isValidPasswd = await comparePassword(
+          user.passwd ?? '',
+          mbr.passwd
+        );
         if (!isValidPasswd)
           throw authError('Invalid Password!', 'CredentialsSignin');
       } else {
@@ -93,12 +95,12 @@ export const {
         token.image = userData.image;
         token.isadmin = userData.isadmin;
 
-        if (account) {
-          token.accessToken = account?.access_token;
-          token.accessTokenExpires =
-            Date.now() + (account.expires_in ?? 0) * 1000;
-          token.refreshToken = account.refresh_token;
-        }
+        // if (account) {
+        //   token.accessToken = account?.access_token;
+        //   token.accessTokenExpires =
+        //     Date.now() + (account.expires_in ?? 0) * 1000;
+        //   token.refreshToken = account.refresh_token;
+        // }
       }
       return token;
     },

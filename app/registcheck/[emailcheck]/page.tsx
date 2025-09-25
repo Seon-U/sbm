@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation';
-import { findMemberByEmail } from '@/app/sign/sign.action';
-import prisma from '@/lib/db';
+import prisma, { findMemberByEmail } from '@/lib/db';
 
 type Props = {
   params: Promise<{ emailcheck: string }>;

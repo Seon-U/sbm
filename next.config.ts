@@ -2,6 +2,11 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   /* config options here */
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '100mb',
+    },
+  },
   images: {
     remotePatterns: [
       { hostname: '*.googleusercontent.com' },
@@ -9,7 +14,7 @@ const nextConfig: NextConfig = {
       { hostname: 'phinf.pstatic.net' },
       { hostname: '*.kakaocdn.net' },
       { hostname: 'localhost' },
-      { hostname: 'localhost:3000' },
+      { hostname: 'localhost', port: '3000', protocol: 'http' },
     ],
   },
 };

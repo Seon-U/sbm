@@ -8,7 +8,7 @@ import { AuthError } from 'next-auth';
 import path from 'path';
 import z from 'zod';
 import { auth, signIn, signOut } from '@/lib/auth';
-import prisma from '@/lib/db';
+import prisma, { findMemberByEmail } from '@/lib/db';
 import { newToken, uniqId } from '@/lib/utils';
 import { type ValidError, validate } from '@/lib/validator';
 import type { SendMailBody } from '../api/sendmail/route';
@@ -219,29 +219,15 @@ const sendmailByFetch = async ({
   });
 };
 
-export const findMemberByEmail = async (
-  email: string,
-  passwd: boolean = false
-) =>
-  prisma.member.findUnique({
-    select: {
-      id: true,
-      nickname: true,
-      isadmin: true,
-      emailcheck: true,
-      outdt: true,
-      image: true,
-      passwd,
-    },
-    where: { email },
-  });
+export type UpdateProfileImageReturn = ReturnType<typeof updateProfileImage>;
 
 export const updateProfileImage = async (formData: FormData) => {
   const session = await auth();
-  if (!session?.user || !session.user.email) return {}; //[new Error(`Need Login`)];
+  if (!session?.user || !session.user.email) throw new Error('Need Login');
 
   const { id, email } = session.user;
   const ent = Object.fromEntries(formData.entries());
+  console.log('🚀 ~ ent:', ent);
   const zobj = z.object({
     image: z
       .instanceof(File)
