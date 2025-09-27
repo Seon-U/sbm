@@ -3,14 +3,20 @@
 import { hash } from 'bcryptjs';
 import { existsSync, mkdirSync } from 'fs';
 import { writeFile } from 'fs/promises';
+import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { AuthError } from 'next-auth';
 import path from 'path';
 import z from 'zod';
 import { auth, signIn, signOut } from '@/lib/auth';
 import prisma, { findMemberByEmail } from '@/lib/db';
-import { newToken, uniqId } from '@/lib/utils';
-import { type ValidError, validate } from '@/lib/validator';
+import { newToken, uniqId, uniqNumId } from '@/lib/utils';
+import {
+  comparePassword,
+  existsEmail,
+  type ValidError,
+  validate,
+} from '@/lib/validator';
 import type { SendMailBody } from '../api/sendmail/route';
 
 export type Provider = 'google' | 'github' | 'naver' | 'kakao';
@@ -93,11 +99,8 @@ export const regist = async (
   if (err) return err;
 
   const { email, nickname, passwd: orgPasswd } = data;
-  const mbr = await findMemberByEmail(email);
-  if (mbr)
-    return {
-      email: { errors: ['Duplicated Email Address!'], value: email },
-    };
+  const existsErr = existsEmail(email);
+  if (existsErr) return existsErr;
 
   const passwd = await hash(orgPasswd, 10);
   const emailcheck = newToken();
@@ -219,6 +222,88 @@ const sendmailByFetch = async ({
   });
 };
 
+export const sendEmailChangeCode = async (formData: FormData) => {
+  const session = await auth();
+  if (!session?.user || !session.user.email) throw new Error('Need Login!');
+  const { email } = session.user;
+  const mbr = await findMemberByEmail(email);
+
+  const zobj = z
+    .object({
+      nickname: z.string().min(3),
+      newEmail: z.email(),
+      curr_passwd: z.string().min(6).optional(),
+      passwd: z.string().min(6).optional(),
+      passwd2: z.string().min(6).optional(),
+    })
+    .refine(
+      ({ curr_passwd, passwd, passwd2 }) => {
+        return (
+          (!curr_passwd && !passwd && !passwd2) ||
+          (curr_passwd && passwd && passwd2)
+        );
+      },
+      { path: ['passwd2'], message: 'Input the all password to change!' }
+    )
+    .refine(({ curr_passwd, passwd, passwd2 }) => {
+      if (curr_passwd && passwd && passwd2 && mbr?.passwd) {
+        return passwd === passwd2;
+      }
+      return true;
+    });
+
+  const [err, data] = validate(zobj, formData);
+  if (err) return err;
+
+  const dataErr: ValidError = {};
+  for (const [key, value] of Object.entries(data)) {
+    dataErr[key] = { errors: [], value };
+  }
+
+  const { newEmail, nickname, curr_passwd } = data;
+  if (mbr?.passwd && curr_passwd) {
+    const ValidCurrPasswd = await comparePassword(mbr?.passwd, curr_passwd);
+    if (!ValidCurrPasswd)
+      return {
+        ...dataErr,
+        curr_passwd: {
+          errors: ['Invalid current password!'],
+          value: curr_passwd,
+        },
+      };
+  }
+
+  const existsErr = await existsEmail(newEmail, 'newEmail');
+  if (existsErr) return { ...dataErr, ...existsErr };
+
+  const emailcheck = uniqNumId();
+  // 시간 타임아웃 처리
+  await prisma.member.update({
+    where: { email },
+    data: { emailcheck },
+  });
+
+  setTimeout(
+    () => {
+      async () => {
+        await prisma.member.update({
+          where: { email },
+          data: { emailcheck: null },
+        });
+      };
+    },
+    5000 //QQQ: 2 * 60 * 1000);
+  );
+
+  await sendmailByFetch({
+    email,
+    emailcheck,
+    nickname,
+    emailType: 'email-change-code',
+  });
+  return dataErr;
+};
+
 export type UpdateProfileImageReturn = ReturnType<typeof updateProfileImage>;
 
 export const updateProfileImage = async (formData: FormData) => {
@@ -256,6 +341,6 @@ export const updateProfileImage = async (formData: FormData) => {
     where: { email },
     data: { image },
   });
-
+  revalidatePath('/profiles');
   return [null, mbr];
 };

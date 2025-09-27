@@ -12,7 +12,7 @@ import {
   useTransition,
 } from 'react';
 import type { UpdateProfileImageReturn } from '@/app/sign/sign.action';
-import { cn } from '@/lib/utils';
+import { cn, DummyProfile } from '@/lib/utils';
 
 type Props = {
   src: string | StaticImageData;
@@ -43,7 +43,7 @@ export default function ImageUploader({ src, alt, changeImage }: Props) {
     console.log('🚀 ~ file:', file);
     const reader = new FileReader();
     reader.onload = e => {
-      console.log('🚀 ~ e:', e.target?.result);
+      // console.log('🚀 ~ e:', e.target?.result);
       if (e.target) setImg(e.target.result as string);
       if (needSubmit) formRef.current?.requestSubmit();
     };
@@ -55,15 +55,15 @@ export default function ImageUploader({ src, alt, changeImage }: Props) {
   const submitHandler = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    console.log('***>>>', formData);
+    // console.log('***>>>', formData);
     uploadImage(formData);
   };
 
   const uploadImage = (formData: FormData) => {
     setErrorMsgs([]);
     startTransition(async () => {
-      const ent = Object.fromEntries(formData.entries());
-      console.log('🚀 ~ ent:', ent);
+      // const ent = Object.fromEntries(formData.entries());
+      // console.log('🚀 ~ ent:', ent);
       if (!changeImage) return;
       const [err, mbr] = await changeImage(formData);
       if (err) {
@@ -73,7 +73,7 @@ export default function ImageUploader({ src, alt, changeImage }: Props) {
           return;
         }
       }
-      update(mbr);
+      await update(mbr);
       router.refresh();
     });
   };
@@ -95,7 +95,7 @@ export default function ImageUploader({ src, alt, changeImage }: Props) {
           e.stopPropagation();
           setDragging(false);
           const files = e.dataTransfer.files;
-          if (files?.length) setPreview(files[0], false);
+          if (files?.length) setPreview(files[0]);
 
           const formData = new FormData();
           formData.append('image', files[0]);
@@ -116,6 +116,7 @@ export default function ImageUploader({ src, alt, changeImage }: Props) {
           fill
           unoptimized={process.env.NODE_ENV === 'development'}
           priority={false}
+          onError={() => setImg(DummyProfile)}
         />
 
         <input
