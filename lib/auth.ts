@@ -61,10 +61,7 @@ export const {
         if (!mbr.passwd)
           throw authError('RegistedBySNS', 'OAuthAccountNotLinked');
 
-        const isValidPasswd = await comparePassword(
-          user.passwd ?? '',
-          mbr.passwd
-        );
+        const isValidPasswd = await comparePassword(user.passwd, mbr.passwd);
         if (!isValidPasswd)
           throw authError('Invalid Password!', 'CredentialsSignin');
       } else {
@@ -82,10 +79,11 @@ export const {
       user.isadmin = mbr.isadmin;
       return true;
     },
-    async jwt({ token, user, trigger, account, session }) {
-      if (account) console.log('🚀 ~ account:', account);
+    async jwt({ token, user, trigger, session }) {
+      //if (account) console.log('🚀 ~ account:', account);
 
       const userData = trigger === 'update' ? session : user;
+      if (trigger === 'update') console.log('🚀 update- userData:', userData);
 
       if (userData) {
         token.id = userData.id;
