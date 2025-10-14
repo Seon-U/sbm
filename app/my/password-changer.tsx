@@ -1,7 +1,7 @@
 'use client';
 
 import { CheckLineIcon, UndoDotIcon } from 'lucide-react';
-import { type ActionDispatch, type FormEvent, useActionState } from 'react';
+import { type ActionDispatch, useActionState } from 'react';
 import LabelInput from '@/components/label-input';
 import { Button } from '@/components/ui/button';
 import type { ValidError } from '@/lib/validator';
@@ -21,18 +21,8 @@ export default function PasswordChanger({
     undefined
   );
 
-  const submitHandler = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    console.log('*', Object.fromEntries(formData.entries()));
-    changePassword(formData);
-  };
-
   return (
-    <form
-      onSubmit={submitHandler}
-      className='rounded-md border-2 border-red-300 p-3'
-    >
+    <form className='rounded-md border-2 border-red-300 p-3'>
       <LabelInput
         label='Current Password'
         name='curr_passwd'
@@ -59,7 +49,12 @@ export default function PasswordChanger({
         <Button onClick={toggleEditing} type='reset' variant={'outline'}>
           <UndoDotIcon /> Cancel
         </Button>
-        <Button type='submit' variant={'destructive'} disabled={isPending}>
+        <Button
+          formAction={changePassword}
+          type='submit'
+          variant={'destructive'}
+          disabled={isPending}
+        >
           <CheckLineIcon /> Change Password
         </Button>
       </div>

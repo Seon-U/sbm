@@ -1,4 +1,4 @@
-import { compare } from 'bcryptjs';
+import { compare, hash } from 'bcryptjs';
 import { existsSync } from 'fs';
 import path from 'path';
 import z from 'zod';
@@ -30,19 +30,49 @@ export const validateObject = <T extends z.ZodObject>(
   const validator = zobj.safeParse(obj);
 
   if (!validator.success) {
-    const err = z.treeifyError(validator.error).properties as ValidError;
-
-    for (const [prop, value] of Object.entries(obj)) {
-      if (prop.startsWith('$')) continue;
-      if (!err[prop]) err[prop] = { errors: [] };
-
-      err[prop].value = value as string;
-
-      // err[prop] = {...(err[prop] ?? {errors: []}), value};
-    }
-    return [err];
+    return [validErrorWithData(validator.error, obj)];
   } else {
     return [undefined, validator.data];
+  }
+};
+
+const validErrorWithData = (
+  error: z.ZodError | unknown,
+  obj: Record<string, FormDataEntryValue | string | unknown>
+) => {
+  let err =
+    error instanceof z.ZodError &&
+    (z.treeifyError(error as z.ZodError<typeof obj>).properties as ValidError);
+
+  for (const [prop, value] of Object.entries(obj)) {
+    if (prop.startsWith('$')) continue;
+    if (!err)
+      err = {
+        [prop]: {
+          errors: [(error as Error)?.message || JSON.stringify(error)],
+        },
+      };
+    if (!err[prop]) err[prop] = { errors: [] };
+    err[prop].value = value as string;
+  }
+  return err as ValidError;
+};
+
+export const validateAsync = async <T extends z.ZodObject>(
+  zobj: T,
+  formDataORObj:
+    | FormData
+    | Record<string, FormDataEntryValue | string | unknown>
+): Promise<[ValidError] | [undefined, z.core.output<T>]> => {
+  const obj =
+    formDataORObj instanceof FormData
+      ? Object.fromEntries(formDataORObj.entries())
+      : formDataORObj;
+  try {
+    const validData = await zobj.parseAsync(obj);
+    return [undefined, validData];
+  } catch (error) {
+    return [validErrorWithData(error, obj)];
   }
 };
 
@@ -51,7 +81,6 @@ export const comparePassword = (p1: string | undefined, p2: string) => {
 };
 export const existsFile = (filePath: string | undefined | null) => {
   if (!filePath) return filePath;
-
   const fullPath = path.join(process.cwd(), 'public', 'profiles');
   return existsSync(fullPath) ? filePath : null;
 };
@@ -62,31 +91,4 @@ export const existsEmail = async (email: string, prop: string = 'email') => {
     return { [prop]: { errors: ['Duplicated Email Address!'], value: email } };
 };
 
-export const validateAsync = async <T extends z.ZodObject>(
-  zobj: T,
-  formData: FormData
-): Promise<[ValidError] | [undefined, z.core.output<T>]> =>
-  validateObjectAsync(zobj, Object.fromEntries(formData.entries()));
-
-export const validateObjectAsync = async <T extends z.ZodObject>(
-  zobj: T,
-  obj: Record<string, FormDataEntryValue | string | unknown>
-): Promise<[ValidError] | [undefined, z.core.output<T>]> => {
-  const validator = await zobj.safeParseAsync(obj);
-
-  if (!validator.success) {
-    const err = z.treeifyError(validator.error).properties as ValidError;
-
-    for (const [prop, value] of Object.entries(obj)) {
-      if (prop.startsWith('$')) continue;
-      if (!err[prop]) err[prop] = { errors: [] };
-
-      err[prop].value = value as string;
-
-      // err[prop] = {...(err[prop] ?? {errors: []}), value};
-    }
-    return [err];
-  } else {
-    return [undefined, validator.data];
-  }
-};
+export const encryptPassword = async (passwd: string) => hash(passwd, 10);

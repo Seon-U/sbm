@@ -6,6 +6,7 @@ declare module 'next-auth' {
     user: {
       isadmin?: boolean;
     } & DefaultSession['user'];
+    expires: Date;
   }
   interface User {
     passwd?: string; // (: callbacks > signIn에서 password 비교)
