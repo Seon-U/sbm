@@ -31,6 +31,7 @@ export default function EmailChanger({ email, toggleEditing }: Props) {
   const [validError, setValidError] = useState<ValidError>();
 
   const formRef = useRef<HTMLFormElement>(null);
+  const codeRef = useRef<HTMLInputElement>(null);
   const [submitType, setSubmitType] = useState<'sendmail' | 'confirm'>(
     'sendmail'
   );
@@ -44,20 +45,28 @@ export default function EmailChanger({ email, toggleEditing }: Props) {
   //   undefined,
   // );
   const [isSending, startTransition] = useTransition();
+
   const submitHandler = (e: FormEvent<HTMLFormElement>) => {
+    console.log('##############', submitType);
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
+    console.log('*', Object.fromEntries(formData.entries()));
     startTransition(async () => {
       if (submitType === 'sendmail') {
         const err = await sendEmailChangeCode(formData);
         if (err) setValidError(err);
-        else toggleSendCode();
+        setValidError(undefined);
+        if (!didSendCode) toggleSendCode();
       } else if (submitType === 'confirm') {
+        formData.set('emailChangeCode', codeRef.current?.value || '');
         const [err, mbr] = await updateEmail(formData);
+
         if (err) {
           setValidError(err);
         } else {
           await update(mbr);
+          toggleEditing();
+          toggleSendCode();
           router.refresh();
         }
       }
@@ -111,6 +120,7 @@ export default function EmailChanger({ email, toggleEditing }: Props) {
             label='Email change code(until 2 min)'
             type='text'
             name='emailChangeCode'
+            ref={codeRef}
             error={validError}
             placeholder='input code...'
           />

@@ -45,6 +45,7 @@ export const validateObject = <T extends z.ZodObject>(
     return [undefined, validator.data];
   }
 };
+
 export const comparePassword = (p1: string | undefined, p2: string) => {
   return compare(p1 || '', p2);
 };
@@ -59,4 +60,33 @@ export const existsEmail = async (email: string, prop: string = 'email') => {
   const mbr = await findMemberByEmail(email);
   if (mbr)
     return { [prop]: { errors: ['Duplicated Email Address!'], value: email } };
+};
+
+export const validateAsync = async <T extends z.ZodObject>(
+  zobj: T,
+  formData: FormData
+): Promise<[ValidError] | [undefined, z.core.output<T>]> =>
+  validateObjectAsync(zobj, Object.fromEntries(formData.entries()));
+
+export const validateObjectAsync = async <T extends z.ZodObject>(
+  zobj: T,
+  obj: Record<string, FormDataEntryValue | string | unknown>
+): Promise<[ValidError] | [undefined, z.core.output<T>]> => {
+  const validator = await zobj.safeParseAsync(obj);
+
+  if (!validator.success) {
+    const err = z.treeifyError(validator.error).properties as ValidError;
+
+    for (const [prop, value] of Object.entries(obj)) {
+      if (prop.startsWith('$')) continue;
+      if (!err[prop]) err[prop] = { errors: [] };
+
+      err[prop].value = value as string;
+
+      // err[prop] = {...(err[prop] ?? {errors: []}), value};
+    }
+    return [err];
+  } else {
+    return [undefined, validator.data];
+  }
 };
