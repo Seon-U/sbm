@@ -166,7 +166,7 @@ export const resetPassword = async (
 
   const { email, passwd2, emailcheck } = data;
 
-  const passwd = await encryptPassword(passwd2, 10);
+  const passwd = await encryptPassword(passwd2);
   await prisma.member.update({
     where: { email, emailcheck },
     data: { passwd, emailcheck: null },
@@ -255,7 +255,7 @@ export const sendEmailChangeCode = async (formData: FormData) => {
         data: { emailcheck: null },
       });
     },
-    5000 //QQQ: 2 * 60 * 1000);
+    2 * 60 * 1000
   );
 
   await sendmailByFetch({

@@ -23,10 +23,10 @@ export default function ChangeProfile({ user }: Props) {
   // const { update } = useSession({ required: true });
   const router = useRouter();
   const { update } = useSession();
-  const [isEditingEmail, toggleEditingEmail] = useReducer(pre => !pre, true); //QQQ:개발시만 true
+  const [isEditingEmail, toggleEditingEmail] = useReducer(pre => !pre, false); //QQQ:개발시만 true
   const [isEditingPassword, toggleEditingPassword] = useReducer(
     pre => !pre,
-    true
+    false
   ); //QQQ:개발시만 true
 
   const changeNickname = async (formData: FormData) => {
