@@ -3,6 +3,7 @@ import { twMerge } from 'tailwind-merge';
 import { v4 as uuid } from 'uuid';
 
 export { default as DummyProfile } from '@/public/dummy-profile.png';
+export const DUMMYProfileFile = '/dummy-profile.png';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

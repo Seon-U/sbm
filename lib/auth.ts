@@ -52,10 +52,10 @@ export const {
   callbacks: {
     async signIn({ user, profile, account }) {
       const isCredential = account?.provider === 'credentials';
-      console.log('🚀 ~ isCredential:', isCredential);
-      console.log('🚀 ~ profile:', profile);
-      console.log('🚀 ~ user:', user);
-      console.log('🚀 ~ account:', account);
+      // console.log('🚀 ~ isCredential:', isCredential);
+      // console.log('🚀 ~ profile:', profile);
+      // console.log('🚀 ~ user:', user);
+      // console.log('🚀 ~ account:', account);
       const { email, name: nickname, image } = user;
       if (!email) return false;
 
@@ -94,7 +94,7 @@ export const {
       //if (account) console.log('🚀 ~ account:', account);
 
       const userData = trigger === 'update' ? session : user;
-      if (trigger === 'update') console.log('🚀 update- userData:', userData);
+      // if (trigger === 'update') console.log('🚀 update- userData:', userData);
 
       if (userData) {
         token.id = userData.id;
@@ -110,7 +110,7 @@ export const {
         //   token.refreshToken = account.refresh_token;
         // }
       }
-      // token.exp = Math.floor(Date.now() / 1000) + 60;
+      // token.exp = Math.floor(Date.now() / 1000) + 60 * 60;
       return token;
     },
 
@@ -136,7 +136,7 @@ export const {
   session: {
     strategy: 'jwt',
     maxAge: MAX_AGE, //default: 1month
-    // updateAge: 10,
+    // updateAge: 10 * 60,
   },
 });
 

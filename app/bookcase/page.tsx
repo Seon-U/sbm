@@ -6,8 +6,7 @@ export default function Bookcase() {
   const session = use(auth());
   console.log('🚀 ~ session:', session);
   const didLogin = !!session?.user?.email;
-  if (!session?.user?.name) redirect('/');
+  if (!session?.user?.id) redirect('/');
 
-  const nickname = encodeURI(session.user.name);
-  redirect(didLogin ? `/bookcase/${nickname}` : '/');
+  redirect(didLogin ? `/bookcase/${session.user.id}` : '/');
 }

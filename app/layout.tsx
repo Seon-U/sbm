@@ -42,8 +42,8 @@ export default async function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <div className='container mx-auto flex h-screen flex-col justify-center'>
-              <header className='flex justify-between border-b-1'>
+            <div className='flex h-screen flex-col justify-center'>
+              <header className='flex justify-between border-b-1 px-2'>
                 <Link
                   href='/'
                   className='flex items-center font-semibold text-3xl text-green-500 tracking-tight'
@@ -52,7 +52,7 @@ export default async function RootLayout({
                 </Link>
                 <Nav />
               </header>
-              <main className='flex-1'>{children}</main>
+              <main className='flex-1 overflow-hidden px-2'>{children}</main>
               <footer className='text-center text-green-500'>
                 &#169; seonu Sesac 2025
               </footer>
