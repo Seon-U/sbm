@@ -203,5 +203,6 @@
   },
   "quokka.fontSize": 12,
   "turboConsoleLog.logType": "debug",
-  "biome.suggestInstallingGlobally": false
+  "biome.suggestInstallingGlobally": false,
+  "typescript.preferences.autoImportFileExcludePatterns": ["@radix-ui/*"]
 }

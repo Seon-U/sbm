@@ -77,7 +77,7 @@ export const authorize = async (
 };
 
 export const logout = async () => {
-  await signOut({ redirectTo: '/sign' }); // QQQ: '/'
+  await signOut({ redirectTo: '/' });
 };
 
 export const regist = async (
@@ -158,7 +158,7 @@ export const resetPassword = async (
     })
     .refine(({ passwd, passwd2 }) => passwd === passwd2, {
       path: ['passwd2'],
-      message: 'Not match password and Password confirm!',
+      message: 'Not Match Password and Password confirm!',
     });
 
   const [err, data] = validate(zobj, formData);
@@ -334,7 +334,7 @@ export const sendEmailChangeCode_일괄 = async (formData: FormData) => {
         data: { emailcheck: null },
       });
     },
-    5000 //QQQ: 2 * 60 * 1000);
+    2 * 60 * 1000
   );
 
   await sendmailByFetch({
@@ -358,7 +358,7 @@ export const updateProfileImage = async (formData: FormData) => {
   const zobj = z.object({
     image: z
       .instanceof(File)
-      .refine(file => file.size <= 10 * 1024 * 1024, 'Under 10MB!')
+      .refine(file => file.size <= 10 * 1024 * 1024, 'Under 10MB plz!')
       .refine(file => file.type.startsWith('image/'), 'Upload Image only!'),
   });
 

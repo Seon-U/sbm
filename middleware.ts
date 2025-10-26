@@ -1,5 +1,5 @@
-import { encode, getToken } from 'next-auth/jwt';
 import { type NextRequest, NextResponse } from 'next/server';
+import { encode, getToken } from 'next-auth/jwt';
 import { MAX_AGE } from './lib/auth';
 
 const REFRESH_THREDSHOLD = 10 * 60 * 1000; //쿠키 굽는 단
@@ -22,11 +22,13 @@ export async function middleware(req: NextRequest) {
   //   console.log('🚀 ~ decToken:', decToken);
   // }
   const pathname = req.nextUrl.pathname;
-  if (!token && NEED_COOKIES.includes(pathname)) return NextResponse.next();
-  if (!token)
+  if (!token) {
+    if (NEED_COOKIES.includes(pathname) || pathname.includes('/bookcase/'))
+      return NextResponse.next();
     return NextResponse.redirect(
-      new URL(`/sign?redirectTo=${req.nextUrl.pathname}`, req.url)
+      new URL(`/sign?redirectTo=${pathname}`, req.url)
     );
+  }
 
   // const session = await auth();
   // const didLogin = !!session?.user?.email;
@@ -64,7 +66,7 @@ export async function middleware(req: NextRequest) {
 export const config = {
   // runtime: 'nodejs',
   matcher: [
-    '/((?!sign|_next/static|_next/image|api/auth|api/sendmail|forgotpasswd|registcheck|favicon.ico|robots.txt|.well-known|bookcase/|profile|$).*)',
+    '/((?!sign|_next/static|_next/image|api/auth|api/sendmail|forgotpasswd|registcheck|favicon.ico|robots.txt|.well-known|dummy|$).*)',
     // '/api/:path*',
     '/',
   ],

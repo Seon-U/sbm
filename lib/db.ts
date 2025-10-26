@@ -1,8 +1,18 @@
+'only server';
+
 import { PrismaClient } from '@/lib/generated/prisma/client';
 
-const prisma = new PrismaClient();
+const newInstance = () => new PrismaClient();
 
+// biome-ignore lint/suspicious/noShadowRestrictedNames: for too many connecting problem
+declare const globalThis: {
+  prismaGlobal: ReturnType<typeof newInstance>;
+} & typeof global;
+
+const prisma = globalThis.prismaGlobal ?? newInstance();
+// const prisma = new PrismaClient();
 export default prisma;
+globalThis.prismaGlobal = prisma;
 
 export const findMemberByEmail = async (
   email: string,
@@ -40,6 +50,7 @@ export const findMemberById = async (id: number | string) =>
 
 export const findMemberByIdWithCount = async (id: number | string) =>
   prisma.member.findUnique({
+    where: { id: Number(id) },
     select: {
       id: true,
       email: true,
@@ -48,5 +59,46 @@ export const findMemberByIdWithCount = async (id: number | string) =>
       isadmin: true,
       _count: { select: { Book: true, Mark: true } },
     },
-    where: { id: Number(id) },
+  });
+
+//book
+export type BookAllColumn = Awaited<ReturnType<typeof findBookWithMarkById>>;
+export type BookData = Omit<
+  NonNullable<BookAllColumn>,
+  'Mark' | 'createdAt' | 'updatedAt'
+>;
+
+export const findBookById = async (id: number) =>
+  prisma.book.findUnique({
+    where: { id },
+  });
+
+export const findBookWithMarkById = async (id: number) =>
+  prisma.book.findUnique({
+    where: { id },
+    include: {
+      Mark: {
+        include: {
+          _count: { select: { Likes: true, Report: true, Talk: true } },
+        },
+      },
+    },
+  });
+
+//mark
+export type MarkAllColumn = NonNullable<
+  Awaited<ReturnType<typeof findMarkWithCount>>
+>;
+
+export type MarkData = Omit<
+  MarkAllColumn,
+  '_count' | 'createdAt' | 'updatedAt'
+>;
+
+export const findMarkWithCount = async (id: number) =>
+  prisma.mark.findUnique({
+    where: { id },
+    include: {
+      _count: { select: { Likes: true, Talk: true, Report: true } },
+    },
   });
