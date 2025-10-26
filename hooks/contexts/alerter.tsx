@@ -33,7 +33,7 @@ type Options = {
   okText?: string;
   cancelText?: string;
   variant?: 'default' | 'destructive';
-  type: AlertType;
+  type?: AlertType;
   placeholder?: string;
 };
 
