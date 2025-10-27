@@ -1,6 +1,6 @@
 'use client';
 
-import type { JSX, PropsWithChildren } from 'react';
+import type { JSX, MouseEvent, PropsWithChildren } from 'react';
 import { cn } from '@/lib/utils';
 import IconLabel from './icon-label';
 import ToolTip from './tool-tip';
@@ -8,7 +8,7 @@ import { Button } from './ui/button';
 
 type Props = {
   icon: JSX.Element;
-  onClick?: () => void;
+  onClick?: (e: MouseEvent<HTMLButtonElement>) => void;
   isActive?: boolean;
   isDanger?: boolean;
   tooltip?: string;

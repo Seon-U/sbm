@@ -9,6 +9,8 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import type { MouseEvent } from 'react';
 import IconLabelButton from '@/components/icon-label-button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
@@ -26,9 +28,25 @@ export default function Mark({
   withdel: boolean;
   bookOwner: number;
 }) {
-  const { iLikedMarks, iReportedMarks } = useStore();
+  const { data: session } = useSession();
+  const userId = Number(session?.user.id);
+
+  const { iLikedMarks, iReportedMarks, toggleLikes, toggleReports } =
+    useStore();
   const router = useRouter();
   const { alert } = useAlerter();
+
+  const likeMark = (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleLikes(mark);
+  };
+
+  const reportMark = (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleReports(mark.id);
+  };
 
   const openLinkTrigger = async () => {
     //좋아요한 마크는 바로 삭제에서 제외
@@ -42,6 +60,7 @@ export default function Mark({
       }
     }
   };
+
   return (
     <div className='group rounded-lg bg-white px-2 pt-2 pb-0.5 shadow-md hover:bg-slate-50 hover:shadow-lg'>
       <Link
@@ -64,6 +83,9 @@ export default function Mark({
 
           <div className='flex flex-col overflow-hidden [&>*]:truncate'>
             <h1 className='text-lg dark:text-black/70' title={mark.title}>
+              {process.env.NODE_ENV === 'development' && (
+                <small className='text-muted-foreground'>{mark.id}</small>
+              )}
               {mark.title}
             </h1>
             <small className='text-muted-foreground'>
@@ -78,6 +100,7 @@ export default function Mark({
         <div className='flex items-center justify-between text-sm'>
           <IconLabelButton
             icon={<ThumbsUpIcon />}
+            onClick={likeMark}
             isActive={iLikedMarks.includes(mark.id)}
           >
             {mark._count.Likes}
@@ -87,6 +110,7 @@ export default function Mark({
           </IconLabelButton>
           <IconLabelButton
             icon={<HatGlassesIcon />}
+            onClick={reportMark}
             isDanger
             isActive={iReportedMarks.includes(mark.id)}
           >

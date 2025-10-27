@@ -10,16 +10,21 @@ import {
   useState,
 } from 'react';
 import { likesAndReports } from '@/app/bookcase/[id]/book.action';
+import type { MarkAllColumn } from '@/lib/db';
 
 type ContextValueProps = {
   iLikedMarks: number[];
   iReportedMarks: number[];
+  toggleLikes;
+  toggleReports;
   // setMarks: (likes: number[], reports: number[]) => void;
 };
 
 const StoreContext = createContext<ContextValueProps>({
   iLikedMarks: [],
   iReportedMarks: [],
+  toggleLikes: () => {},
+  toggleReports: () => {},
   // setMarks: (likes:number[], reports:number[]) => void,
 });
 
@@ -35,6 +40,28 @@ export function StoreProvider({ children }: PropsWithChildren) {
     setReportedMarks(reports);
   }, []);
 
+  const toggleLikesOrReports = (
+    mark: MarkAllColumn,
+    type: 'likes' | 'reports'
+  ) => {
+    const [state, setState] =
+      type === 'likes'
+        ? [iLikedMarks, setLikedMarks]
+        : [iReportedMarks, setReportedMarks];
+
+    const hasNow = state.includes(mark.id);
+    mark._count.Likes += hasNow ? -1 : 1;
+
+    if (hasNow) setState(state.filter(id => id !== mark.id));
+    else setState([...state, mark.id]);
+  };
+
+  const toggleLikes = (mark: MarkAllColumn) =>
+    toggleLikesOrReports(mark, 'likes');
+
+  const toggleReports = (mark: MarkAllColumn) =>
+    toggleLikesOrReports(mark, 'reports');
+
   useEffect(() => {
     if (session?.user) {
       likesAndReports(Number(session.user.id)).then(res => {
@@ -49,7 +76,9 @@ export function StoreProvider({ children }: PropsWithChildren) {
   }, [session?.user, setMarks]);
 
   return (
-    <StoreContext.Provider value={{ iLikedMarks, iReportedMarks }}>
+    <StoreContext.Provider
+      value={{ iLikedMarks, iReportedMarks, toggleLikes, toggleReports }}
+    >
       {children}
     </StoreContext.Provider>
   );

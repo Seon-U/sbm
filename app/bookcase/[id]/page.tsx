@@ -5,6 +5,7 @@ import {
   PlusIcon,
 } from 'lucide-react';
 import { use } from 'react';
+import { includes } from 'zod';
 import IconLabel from '@/components/icon-label';
 import { Button } from '@/components/ui/button';
 import UserAvatar from '@/components/user-avatar';
@@ -33,11 +34,19 @@ export default function BookcaseNickname({ params }: Props) {
         Mark: {
           include: {
             _count: { select: { Likes: true, Report: true, Talk: true } },
+            Likes: { select: { member: true } },
           },
         },
       },
     })
   );
+
+  // books.forEach((book) => {
+  //   book.Mark.forEach((mark) => mark.iliked = mark.likes.map((
+  //     like,
+  //   )=> like.member).includes(userId);
+  //   )
+  // });
 
   return (
     <div className='flex h-full flex-col pt-2'>

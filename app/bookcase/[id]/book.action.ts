@@ -91,11 +91,11 @@ export const deleteBook = async (id: number) => {
 export const likesAndReports = async (member: number) => {
   const ilikes = await prisma.likes.findMany({
     where: { member },
-    select: { id: true },
+    select: { mark: true },
   });
   const ireports = await prisma.report.findMany({
     where: { member },
-    select: { id: true },
+    select: { mark: true },
   });
 
   return [ilikes, ireports];
@@ -134,4 +134,34 @@ export const deleteMark = async (id: number, bookOwner: number) => {
   await prisma.mark.delete({
     where: { id },
   });
+};
+
+export const toggleLikesORMark = async (
+  mark: number,
+  type: 'likes' | 'reports'
+) => {
+  const { id: userId } = await checkLogin();
+  const member = Number(userId);
+
+  const isLikes = type === 'likes';
+  const data = { mark, member };
+  const where = { where: data };
+  const whereMarkMember = { where: { mark_member: data } };
+
+  const likesCnt = await (isLikes
+    ? prisma.likes.count(where)
+    : prisma.report.count(where));
+
+  if (likesCnt > 0) {
+    return type === 'likes'
+      ? prisma.likes.delete(
+          // where: { mark, member: Number(userId) }, many!
+          whereMarkMember
+        )
+      : prisma.report.delete(whereMarkMember);
+  } else {
+    return prisma.likes.create({
+      data,
+    });
+  }
 };

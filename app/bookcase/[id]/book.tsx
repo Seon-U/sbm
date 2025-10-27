@@ -52,6 +52,9 @@ export default function Book({ id, book }: Props) {
           title={remark || title}
         >
           {!ispublic && <BookKeyIcon />}
+          {process.env.NODE_ENV === 'development' && (
+            <small className='text-muted-foreground'>{:book && book.id}</small>
+          )}
           {title}
         </h1>
         {isMine ? (

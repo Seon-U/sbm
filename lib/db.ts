@@ -80,6 +80,9 @@ export const findBookWithMarkById = async (id: number) =>
       Mark: {
         include: {
           _count: { select: { Likes: true, Report: true, Talk: true } },
+          Likes: { select: { member: true } },
+          Report: { select: { member: true } },
+          Talk: { select: { member: true } },
         },
       },
     },
