@@ -113,42 +113,27 @@ export const deleteMark = async (id: number, bookOwner: number) => {
   if (!isadmin && Number(userId) !== bookOwner && mark.maker !== Number(userId))
     throw new Error(`You have not authentication!`);
 
-  // const mark = await prisma.mark.findUnique({
-  //   where: isadmin
-  //     ? { id }
-  //     : {
-  //         OR: [
-  //           { id, maker: Number(userId) },
-  //           { id, maker: bookOwner },
-  //         ],
-  //       },
-  // });
-
-  // if (!mark)
-  //   throw Error(
-  //     isadmin
-  //       ? `This Mark(#${id}) is not Exists`
-  //       : `You have not authentication!`
-  //   );
-
   await prisma.mark.delete({
     where: { id },
   });
 };
 
-export const toggleLikesORMark = async (
+export const toggleLikesORReportMark = async (
   mark: number,
   type: 'likes' | 'reports'
 ) => {
   const { id: userId } = await checkLogin();
   const member = Number(userId);
 
-  const isLikes = type === 'likes';
   const data = { mark, member };
   const where = { where: data };
   const whereMarkMember = { where: { mark_member: data } };
 
-  const likesCnt = await (isLikes
+  // await new Promise((resolve) => setTimeout(resolve, 2000));
+  // if (mark === 4) throw new Error('XXXXXXXXX');
+
+  // select count(*) from Likes where mark = mark and member=userId
+  const likesCnt = await (type === 'likes'
     ? prisma.likes.count(where)
     : prisma.report.count(where));
 
@@ -160,8 +145,36 @@ export const toggleLikesORMark = async (
         )
       : prisma.report.delete(whereMarkMember);
   } else {
-    return prisma.likes.create({
-      data,
-    });
+    return type === 'likes'
+      ? prisma.likes.create({ data })
+      : prisma.report.create({ data });
+  }
+};
+
+export const toggleLikesOrReportMarkIMade = async (
+  mark: number,
+  type: 'likes' | 'reports'
+) => {
+  const { id: userId } = await checkLogin();
+  const member = Number(userId);
+
+  const data = { mark, member };
+  const where = { where: data };
+  const whereMarkMember = { where: { mark_member: data } };
+
+  // 취향탈듯, likes 검증은 1번에 처리냐 같은 기능단위로 묶느냐
+  //likes검증값을 미리 변수에 담아둔다면 위랑 결국 비슷할듯
+  if (type === 'likes') {
+    //toggleLikes
+    const didCnt = await prisma.likes.count(where);
+    return didCnt > 0
+      ? prisma.likes.delete(whereMarkMember)
+      : prisma.likes.create({ data });
+  } else {
+    //toggleReports 로 나눠서 호출할 것 같기도 하다.
+    const didCnt = await prisma.report.count(where);
+    return didCnt > 0
+      ? prisma.report.delete(whereMarkMember)
+      : prisma.report.create({ data });
   }
 };

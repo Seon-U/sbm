@@ -79,9 +79,10 @@ export const validateAsync = async <T extends z.ZodObject>(
 export const comparePassword = (p1: string | undefined, p2: string) => {
   return compare(p1 || '', p2);
 };
+
 export const existsFile = (filePath: string | undefined | null) => {
-  if (!filePath) return filePath;
-  const fullPath = path.join(process.cwd(), 'public', 'profiles');
+  if (!filePath || filePath.startsWith('http')) return filePath;
+  const fullPath = path.join(process.cwd(), 'public', filePath);
   return existsSync(fullPath) ? filePath : null;
 };
 

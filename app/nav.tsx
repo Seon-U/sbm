@@ -26,7 +26,7 @@ export default function Nav() {
             src={existsFile(session.user?.image) || DummyProfile}
             alt={session.user?.name || 'guest'}
             unoptimized={process.env.NODE_ENV === 'development'}
-            priority={false}
+            // priority={false}
             fill
           />
         </Link>

@@ -31,13 +31,9 @@ export default function Book({ id, book }: Props) {
       </h1>
     );
 
-  const { title, remark, ispublic, withdel, member } = data;
+  const { id: bookId, title, remark, ispublic, withdel, member } = data;
   const session = use(auth());
   const isMine = session?.user.id === String(member);
-  const totalLikesCnt = book?.Mark.reduce(
-    (acc, mark) => acc + mark._count.Likes,
-    0
-  );
 
   return (
     <div className='flex h-full w-72 flex-shrink-0 flex-col rounded-lg bg-slate-200 pl-2 dark:bg-muted'>
@@ -51,12 +47,13 @@ export default function Book({ id, book }: Props) {
           )}
           title={remark || title}
         >
-          {!ispublic && <BookKeyIcon />}
           {process.env.NODE_ENV === 'development' && (
-            <small className='text-muted-foreground'>{:book && book.id}</small>
+            <small className='text-muted-foreground'>{bookId}</small>
           )}
+          {!ispublic && <BookKeyIcon />}
           {title}
         </h1>
+
         {isMine ? (
           <BookDialog book={data}>
             <Button
@@ -84,7 +81,7 @@ export default function Book({ id, book }: Props) {
       </div>
 
       {/* Mark group */}
-      <div className='max-h-full space-y-2 overflow-y-scroll pr-2 pb-3'>
+      <div className='max-h-fullxx space-y-2 overflow-y-scroll pr-2 pb-3'>
         {book?.Mark.length ? (
           book?.Mark.map(mark => (
             <Mark
@@ -113,7 +110,7 @@ export default function Book({ id, book }: Props) {
             <IconLabel icon={<AlbumIcon />}>{book?.Mark.length}</IconLabel>
             {ispublic && (
               <IconLabel icon={<HeartPlusIcon className='text-red-400' />}>
-                {totalLikesCnt}
+                {book?.FollowBook.length}
               </IconLabel>
             )}
 

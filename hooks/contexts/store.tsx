@@ -9,14 +9,17 @@ import {
   useEffect,
   useState,
 } from 'react';
-import { likesAndReports } from '@/app/bookcase/[id]/book.action';
+import {
+  likesAndReports,
+  toggleLikesORReportMark,
+} from '@/app/bookcase/[id]/book.action';
 import type { MarkAllColumn } from '@/lib/db';
 
 type ContextValueProps = {
   iLikedMarks: number[];
   iReportedMarks: number[];
-  toggleLikes;
-  toggleReports;
+  toggleLikes: (mark: MarkAllColumn) => void;
+  toggleReports: (mark: MarkAllColumn) => void;
   // setMarks: (likes: number[], reports: number[]) => void;
 };
 
@@ -40,7 +43,7 @@ export function StoreProvider({ children }: PropsWithChildren) {
     setReportedMarks(reports);
   }, []);
 
-  const toggleLikesOrReports = (
+  const toggleLikesOrReports = async (
     mark: MarkAllColumn,
     type: 'likes' | 'reports'
   ) => {
@@ -50,7 +53,8 @@ export function StoreProvider({ children }: PropsWithChildren) {
         : [iReportedMarks, setReportedMarks];
 
     const hasNow = state.includes(mark.id);
-    mark._count.Likes += hasNow ? -1 : 1;
+    await toggleLikesORReportMark(mark.id, type);
+    // mark._count.Likes += hasNow ? -1 : 1;
 
     if (hasNow) setState(state.filter(id => id !== mark.id));
     else setState([...state, mark.id]);
@@ -68,8 +72,8 @@ export function StoreProvider({ children }: PropsWithChildren) {
         // [[{id: 1}, {id: 2}], [{id: 1}]]
         const [likes, reports] = res;
         setMarks(
-          likes.map(({ id }) => id),
-          reports.map(({ id }) => id)
+          likes.map(({ mark }) => mark),
+          reports.map(({ mark }) => mark)
         );
       });
     }

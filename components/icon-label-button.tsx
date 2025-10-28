@@ -12,6 +12,7 @@ type Props = {
   isActive?: boolean;
   isDanger?: boolean;
   tooltip?: string;
+  disabled?: boolean;
 };
 
 export default function IconLabelButton({
@@ -20,6 +21,7 @@ export default function IconLabelButton({
   isActive,
   isDanger,
   tooltip,
+  disabled,
   children,
 }: PropsWithChildren<Props>) {
   return (
@@ -31,6 +33,7 @@ export default function IconLabelButton({
       <Button
         onClick={onClick}
         variant={'ghost'}
+        disabled={disabled}
         className={cn(
           'h-[80%] px-1 py-1 dark:hover:bg-muted-foreground/30',
           isDanger && 'text-destructive',

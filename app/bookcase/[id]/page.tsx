@@ -5,7 +5,6 @@ import {
   PlusIcon,
 } from 'lucide-react';
 import { use } from 'react';
-import { includes } from 'zod';
 import IconLabel from '@/components/icon-label';
 import { Button } from '@/components/ui/button';
 import UserAvatar from '@/components/user-avatar';
@@ -31,10 +30,13 @@ export default function BookcaseNickname({ params }: Props) {
     prisma.book.findMany({
       where: { member: Number(id) },
       include: {
+        FollowBook: { select: { member: true } },
         Mark: {
           include: {
-            _count: { select: { Likes: true, Report: true, Talk: true } },
+            // _count: { select: { Likes: true, Report: true, Talk: true } },
             Likes: { select: { member: true } },
+            Report: { select: { member: true } },
+            Talk: true,
           },
         },
       },

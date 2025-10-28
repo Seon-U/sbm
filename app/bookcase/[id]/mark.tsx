@@ -10,19 +10,18 @@ import {
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import type { MouseEvent } from 'react';
+import { type MouseEvent, useOptimistic, useTransition } from 'react';
 import IconLabelButton from '@/components/icon-label-button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { useAlerter } from '@/hooks/contexts/alerter';
-import { useStore } from '@/hooks/contexts/store';
 import type { MarkAllColumn } from '@/lib/db';
-import { deleteMark } from './book.action';
+import { deleteMark, toggleLikesORReportMark } from './book.action';
 
 export default function Mark({
   mark,
-  withdel,
   bookOwner,
+  withdel,
 }: {
   mark: MarkAllColumn;
   withdel: boolean;
@@ -31,33 +30,64 @@ export default function Mark({
   const { data: session } = useSession();
   const userId = Number(session?.user.id);
 
-  const { iLikedMarks, iReportedMarks, toggleLikes, toggleReports } =
-    useStore();
+  const [likes, setLikes] = useOptimistic(mark.Likes);
+  const [reports, setReports] = useOptimistic(mark.Report);
+  const [isPending, startTransition] = useTransition();
+
+  // const { iLikedMarks, iReportedMarks, toggleLikes, toggleReports } = useStore();
   const router = useRouter();
   const { alert } = useAlerter();
 
-  const likeMark = (e: MouseEvent<HTMLButtonElement>) => {
+  const iLiked = () => likes.map(({ member }) => member).includes(userId);
+  const iReported = () => reports.map(({ member }) => member).includes(userId);
+
+  const likeOrReportMark = (
+    e: MouseEvent<HTMLButtonElement>,
+    type: 'likes' | 'reports'
+  ) => {
     e.preventDefault();
     e.stopPropagation();
-    toggleLikes(mark);
+
+    const hasNow = type === 'likes' ? iLiked() : iReported();
+    const state = type === 'likes' ? likes : reports;
+    const setAction = type === 'likes' ? setLikes : setReports;
+    const col = type === 'likes' ? mark.Likes : mark.Report;
+    const dbData = hasNow
+      ? col.filter(({ member }) => member !== userId)
+      : [...col, { member: userId }];
+
+    startTransition(async () => {
+      try {
+        if (hasNow) {
+          setAction(state.filter(({ member }) => member !== userId));
+        } else {
+          setAction([...state, { member: userId }]);
+        }
+        if (type === 'likes') mark.Likes = dbData;
+        else mark.Report = dbData;
+        await toggleLikesORReportMark(mark.id, type);
+      } catch (error) {
+        if (error instanceof Error) alert({ title: error.message });
+        else alert({ title: JSON.stringify(error) });
+      }
+    });
   };
 
-  const reportMark = (e: MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    toggleReports(mark.id);
-  };
+  const likeMark = (e: MouseEvent<HTMLButtonElement>) =>
+    likeOrReportMark(e, 'likes');
+
+  const reportMark = (e: MouseEvent<HTMLButtonElement>) =>
+    likeOrReportMark(e, 'reports');
 
   const openLinkTrigger = async () => {
     //좋아요한 마크는 바로 삭제에서 제외
-    if (withdel && mark._count.Likes <= 0) {
-      try {
-        await deleteMark(mark.id, bookOwner);
-        router.refresh();
-      } catch (error) {
-        console.log(error);
-        await alert({ title: (error as Error).message });
-      }
+    if (!withdel || mark.Likes.length) return;
+    try {
+      await deleteMark(mark.id, bookOwner);
+      router.refresh();
+    } catch (error) {
+      console.log(error);
+      await alert({ title: (error as Error).message });
     }
   };
 
@@ -101,20 +131,24 @@ export default function Mark({
           <IconLabelButton
             icon={<ThumbsUpIcon />}
             onClick={likeMark}
-            isActive={iLikedMarks.includes(mark.id)}
+            // isActive={iLikedMarks.includes(mark.id)}
+            isActive={iLiked()}
+            disabled={isPending}
           >
-            {mark._count.Likes}
+            {likes.length}
           </IconLabelButton>
           <IconLabelButton icon={<MessageCircleIcon />}>
-            {mark._count.Talk}
+            {mark.Talk.length}
           </IconLabelButton>
           <IconLabelButton
             icon={<HatGlassesIcon />}
             onClick={reportMark}
             isDanger
-            isActive={iReportedMarks.includes(mark.id)}
+            // isActive={iReportedMarks.includes(mark.id)}
+            isActive={iReported()}
+            disabled={isPending}
           >
-            {mark._count.Report}
+            {reports.length}
           </IconLabelButton>
           <IconLabelButton
             icon={<BookmarkXIcon className='size-5' />}

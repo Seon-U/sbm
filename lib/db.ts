@@ -2,6 +2,8 @@
 
 import { PrismaClient } from '@/lib/generated/prisma/client';
 
+// export type { Book, Likes, Member } from '@/lib/generated/prisma/client';
+
 const newInstance = () => new PrismaClient();
 
 // biome-ignore lint/suspicious/noShadowRestrictedNames: for too many connecting problem
@@ -65,7 +67,7 @@ export const findMemberByIdWithCount = async (id: number | string) =>
 export type BookAllColumn = Awaited<ReturnType<typeof findBookWithMarkById>>;
 export type BookData = Omit<
   NonNullable<BookAllColumn>,
-  'Mark' | 'createdAt' | 'updatedAt'
+  'Mark' | 'FollowBook' | 'createdAt' | 'updatedAt'
 >;
 
 export const findBookById = async (id: number) =>
@@ -77,12 +79,13 @@ export const findBookWithMarkById = async (id: number) =>
   prisma.book.findUnique({
     where: { id },
     include: {
+      FollowBook: { select: { member: true } },
       Mark: {
         include: {
-          _count: { select: { Likes: true, Report: true, Talk: true } },
+          // _count: { select: { Likes: true, Report: true, Talk: true } },
           Likes: { select: { member: true } },
           Report: { select: { member: true } },
-          Talk: { select: { member: true } },
+          Talk: true,
         },
       },
     },
@@ -102,6 +105,9 @@ export const findMarkWithCount = async (id: number) =>
   prisma.mark.findUnique({
     where: { id },
     include: {
-      _count: { select: { Likes: true, Talk: true, Report: true } },
+      // _count: { select: { Likes: true, Talk: true, Report: true } },
+      Likes: { select: { member: true } },
+      Report: { select: { member: true } },
+      Talk: true,
     },
   });
