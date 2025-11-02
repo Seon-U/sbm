@@ -1,5 +1,10 @@
 'use client';
 
+import {
+  likesAndReports,
+  toggleLikesOrReportMark,
+} from '@/app/bookcase/[id]/book.action';
+import type { MarkAllColumn } from '@/lib/db';
 import { useSession } from 'next-auth/react';
 import {
   createContext,
@@ -9,11 +14,6 @@ import {
   useEffect,
   useState,
 } from 'react';
-import {
-  likesAndReports,
-  toggleLikesORReportMark,
-} from '@/app/bookcase/[id]/book.action';
-import type { MarkAllColumn } from '@/lib/db';
 
 type ContextValueProps = {
   iLikedMarks: number[];
@@ -53,7 +53,7 @@ export function StoreProvider({ children }: PropsWithChildren) {
         : [iReportedMarks, setReportedMarks];
 
     const hasNow = state.includes(mark.id);
-    await toggleLikesORReportMark(mark.id, type);
+    await toggleLikesOrReportMark(mark.id, type, mark.maker);
     // mark._count.Likes += hasNow ? -1 : 1;
 
     if (hasNow) setState(state.filter(id => id !== mark.id));

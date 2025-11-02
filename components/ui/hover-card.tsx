@@ -15,7 +15,14 @@ function HoverCardTrigger({
   ...props
 }: React.ComponentProps<typeof HoverCardPrimitive.Trigger>) {
   return (
-    <HoverCardPrimitive.Trigger data-slot='hover-card-trigger' {...props} />
+    //? tabIndex로는 해결 안됨 (e.preventdefaultError)
+    //? mobile e.preventEvent touch-none로 변경시 리엑트 돔에러로 변경됨
+    <HoverCardPrimitive.Trigger
+      tabIndex={0}
+      data-slot='hover-card-trigger'
+      {...props}
+      className='touch-none'
+    />
   );
 }
 

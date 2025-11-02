@@ -39,7 +39,7 @@ type Options = {
 
 type ContextValueProps = {
   confirm: (options: Options) => Promise<string>;
-  alert: (options: Options) => Promise<string>;
+  alert: (options: Options | null, error?: unknown) => Promise<string>;
   prompt: (options: Options) => Promise<string>;
 };
 
@@ -83,7 +83,16 @@ export function AlerterProvider({ children }: PropsWithChildren) {
   const makeResolver = (value: string) => setTimeout(resolver, 100, value);
 
   const confirm = (options: Options) => setup(options, 'confirm');
-  const alert = (options: Options) => setup(options, 'alert');
+  const alert = (options: Options | null, error?: unknown) =>
+    setup(
+      options
+        ? options
+        : {
+            title:
+              error instanceof Error ? error.message : JSON.stringify(error),
+          },
+      'alert'
+    );
   const prompt = (options: Options) => setup(options, 'prompt');
 
   return (

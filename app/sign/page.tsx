@@ -1,5 +1,5 @@
-import { use } from 'react';
 import Divider from '@/components/divider';
+import { use } from 'react';
 import { GithubLoginButton } from './(sign-buttons)/github-login-button';
 import { GoogleLoginButton } from './(sign-buttons)/google-login-button';
 import { KakaoLoginButton } from './(sign-buttons)/kakao-login-button';
@@ -15,8 +15,8 @@ type Props = {
 export default function Sign({ searchParams }: Props) {
   const { redirectTo } = use(searchParams);
   return (
-    <div className='container mx-auto grid h-full place-items-center'>
-      <div className='flex w-full overflow-hidden rounded-md border shadow-md [&>div]:p-4'>
+    <div className='container mx-auto grid h-full place-items-center max-w-[700px] mt-16'>
+      <div className='flex w-full overflow-hidden rounded-md border shadow-md [&>div]:p-4 flex-col-reverse sm:flex-row'>
         <div className='flex-1'>
           <div className='flex items-center gap-5'>
             <h1 className='font-semibold text-2xl'>Book & Mark</h1>

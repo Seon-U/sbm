@@ -28,4 +28,13 @@ export const DynamicCsses = [
   'translate-x-[-80px]',
   'translate-x-[-100px]',
   'translate-x-[-120px]',
+  'translate-x-1',
+  'translate-x-1.5',
+  'translate-x-2',
+  'translate-x-2.5',
+  'translate-x-3',
+  'translate-x-3.5',
+  'translate-x-4',
+  'translate-x-4.5',
+  'translate-x-5',
 ];

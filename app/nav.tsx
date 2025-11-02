@@ -1,11 +1,12 @@
+import ThemeChanger from '@/components/theme-changer';
+import UserAvatar from '@/components/user-avatar';
+import { auth } from '@/lib/auth';
+import { existsFile } from '@/lib/validator';
+import DummyProfile from '@/public/dummy-profile.png';
 import { SquareLibraryIcon } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { use } from 'react';
-import ThemeChanger from '@/components/theme-changer';
-import { auth } from '@/lib/auth';
-import { existsFile } from '@/lib/validator';
-import DummyProfile from '@/public/dummy-profile.png';
 
 export default function Nav() {
   const session = use(auth());
@@ -22,6 +23,14 @@ export default function Nav() {
           href='/my'
           className='relative h-[40px] w-[40px] overflow-hidden rounded-full border'
         >
+          <UserAvatar
+            member={{
+              id: Number(session.user.id),
+              nickname: session.user.name || '',
+              image: existsFile(session.user?.image),
+            }}
+          />
+
           <Image
             src={existsFile(session.user?.image) || DummyProfile}
             alt={session.user?.name || 'guest'}

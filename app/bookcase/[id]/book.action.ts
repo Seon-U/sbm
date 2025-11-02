@@ -1,9 +1,33 @@
 'use server';
 
-import z from 'zod';
 import { auth } from '@/lib/auth';
 import prisma from '@/lib/db';
 import { validate, validateAsync } from '@/lib/validator';
+import { revalidateTag, unstable_cache } from 'next/cache';
+import z from 'zod';
+
+export const getAllBooksByMember = async (member: number) =>
+  unstable_cache(
+    () => {
+      // console.log('getAllMembersByMember....', member);
+      return prisma.book.findMany({
+        where: { member },
+        include: {
+          FollowBook: { select: { member: true } },
+          Mark: {
+            include: {
+              Likes: { select: { member: true } },
+              Report: { select: { member: true } },
+              Talk: true,
+              Member: { select: { id: true, image: true, nickname: true } },
+            },
+          },
+        },
+      });
+    },
+    [`member-books-${member}`], //!cache-key,
+    { tags: [`member-books-${member}`] } //? options
+  )();
 
 export const saveBook = async (formData: FormData) => {
   const user = await checkLogin();
@@ -116,11 +140,14 @@ export const deleteMark = async (id: number, bookOwner: number) => {
   await prisma.mark.delete({
     where: { id },
   });
+
+  revalidateTag(`member-book-${bookOwner}`);
 };
 
-export const toggleLikesORReportMark = async (
+export const toggleLikesOrReportMark = async (
   mark: number,
-  type: 'likes' | 'reports'
+  type: 'likes' | 'reports',
+  bookOwner: number
 ) => {
   const { id: userId } = await checkLogin();
   const member = Number(userId);
@@ -138,17 +165,18 @@ export const toggleLikesORReportMark = async (
     : prisma.report.count(where));
 
   if (likesCnt > 0) {
-    return type === 'likes'
-      ? prisma.likes.delete(
+    type === 'likes'
+      ? await prisma.likes.delete(
           // where: { mark, member: Number(userId) }, many!
           whereMarkMember
         )
-      : prisma.report.delete(whereMarkMember);
+      : await prisma.report.delete(whereMarkMember);
   } else {
-    return type === 'likes'
-      ? prisma.likes.create({ data })
-      : prisma.report.create({ data });
+    type === 'likes'
+      ? await prisma.likes.create({ data })
+      : await prisma.report.create({ data });
   }
+  revalidateTag(`member-books-${bookOwner}`);
 };
 
 export const toggleLikesOrReportMarkIMade = async (
@@ -177,4 +205,23 @@ export const toggleLikesOrReportMarkIMade = async (
       ? prisma.report.delete(whereMarkMember)
       : prisma.report.create({ data });
   }
+};
+
+export const toggleFollowBook = async (book: number, bookOwner: number) => {
+  const { id } = await checkLogin();
+  const member = Number(id);
+  const fb = await prisma.followBook.findUnique({
+    where: { book_member: { book, member } },
+  });
+
+  if (fb)
+    await prisma.followBook.delete({
+      where: { book_member: { book, member } },
+    });
+  else
+    await prisma.followBook.create({
+      data: { book, member },
+    });
+  // revalidatePath(`/bookcase/${bookOwner}`);
+  revalidateTag(`member-books-${bookOwner}`);
 };
